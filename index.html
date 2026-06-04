@@ -8,52 +8,102 @@
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   :root{--bg:#1a1228;--panel:#241a3a;--ink:#f4e9d8;--accent:#ffcc2f;--accent2:#ff4d6d;--good:#3ddc97;--line:#4a3a6b;}
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%}
+  html,body{height:100%;overflow:hidden}
   body{background:radial-gradient(1200px 600px at 50% -10%,#3a2a5e 0%,transparent 60%),repeating-linear-gradient(0deg,#160f22 0 2px,#19112a 2px 4px),var(--bg);
     color:var(--ink);font-family:'Press Start 2P',monospace;display:flex;align-items:center;justify-content:center;min-height:100%;
-    overflow:hidden;-webkit-font-smoothing:none;image-rendering:pixelated;user-select:none;touch-action:none;}
-  #wrap{position:relative;width:min(96vw,900px);aspect-ratio:16/9;background:#000;border:4px solid var(--line);border-radius:10px;
-    box-shadow:0 0 0 4px #0a0712,0 24px 60px rgba(0,0,0,.6),inset 0 0 90px rgba(0,0,0,.6);overflow:hidden;}
+    -webkit-font-smoothing:none;image-rendering:pixelated;user-select:none;touch-action:none;}
+
+  /* ── portrait cihaz uyarısı ── */
+  #rotateMsg{display:none;position:fixed;inset:0;z-index:200;background:#1a1228;
+    flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;}
+  #rotateMsg .icon{font-size:52px;animation:spin 2s ease-in-out infinite;}
+  @keyframes spin{0%,100%{transform:rotate(0deg)}50%{transform:rotate(90deg)}}
+  #rotateMsg p{font-size:clamp(10px,3.5vw,14px);color:var(--accent);line-height:1.8;max-width:280px;}
+  @media (orientation:portrait) and (max-height:600px){#rotateMsg{display:flex;}}
+
+  /* ── oyun wrapper'ı ── */
+  /* hem genişlik hem yükseklik sınırı; 120/144Hz ekranlarda da aynı boyut */
+  #wrap{position:relative;
+    width:min(96vw,calc(96vh * 16 / 9),900px);
+    aspect-ratio:16/9;background:#000;
+    border:4px solid var(--line);border-radius:10px;
+    box-shadow:0 0 0 4px #0a0712,0 20px 50px rgba(0,0,0,.6),inset 0 0 80px rgba(0,0,0,.6);
+    overflow:hidden;}
   canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;display:block}
   #wrap::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;
-    background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 120px rgba(0,0,0,.55);mix-blend-mode:multiply;}
-  .screen{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5%;gap:18px;
-    background:linear-gradient(180deg,rgba(26,18,40,.92),rgba(12,8,20,.96));}
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 2px,transparent 2px 4px);
+    box-shadow:inset 0 0 100px rgba(0,0,0,.5);mix-blend-mode:multiply;}
+
+  /* ── ekranlar ── */
+  .screen{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:4% 5%;gap:14px;
+    background:linear-gradient(180deg,rgba(26,18,40,.93),rgba(12,8,20,.97));}
   .hidden{display:none!important}
-  h1{font-size:clamp(18px,4.4vw,40px);line-height:1.4;letter-spacing:1px;color:var(--accent);text-shadow:3px 3px 0 var(--accent2),6px 6px 0 #00000080;}
-  .sub{font-size:clamp(8px,1.6vw,12px);color:#b9a7d6;line-height:1.9}
-  .btn{font-family:inherit;cursor:pointer;font-size:clamp(9px,1.7vw,13px);color:#1a1228;background:var(--accent);border:none;padding:14px 22px;
-    box-shadow:0 5px 0 #b88a00,0 6px 0 #000;border-radius:4px;transition:transform .05s,box-shadow .05s;}
+  h1{font-size:clamp(16px,4vw,40px);line-height:1.4;letter-spacing:1px;color:var(--accent);
+    text-shadow:3px 3px 0 var(--accent2),6px 6px 0 #00000080;}
+  .sub{font-size:clamp(8px,1.8vw,12px);color:#b9a7d6;line-height:1.9}
+  .btn{font-family:inherit;cursor:pointer;font-size:clamp(9px,1.9vw,13px);color:#1a1228;background:var(--accent);
+    border:none;padding:12px 20px;box-shadow:0 5px 0 #b88a00,0 6px 0 #000;border-radius:4px;
+    transition:transform .05s,box-shadow .05s;-webkit-tap-highlight-color:transparent;}
   .btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b88a00,0 2px 0 #000}
   .btn.alt{background:var(--good);box-shadow:0 5px 0 #1f9c69,0 6px 0 #000}
-  #charGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:640px;}
-  .charCard{background:var(--panel);border:3px solid var(--line);border-radius:8px;padding:8px 4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .08s,border-color .08s,background .08s;}
+
+  /* ── karakter seçim ızgarası: mobilde 2 sütun ── */
+  #charGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;width:100%;max-width:640px;}
+  .charCard{background:var(--panel);border:3px solid var(--line);border-radius:8px;padding:8px 4px 6px;
+    cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;
+    transition:transform .08s,border-color .08s,background .08s;-webkit-tap-highlight-color:transparent;}
   .charCard:hover{transform:translateY(-3px);border-color:var(--accent)}
   .charCard.sel{border-color:var(--accent);background:#33255a;box-shadow:0 0 0 2px var(--accent) inset}
-  .charCard canvas{position:static;width:58px;height:58px;background:#15101f;border-radius:4px}
-  .charCard .nm{font-size:clamp(7px,1.3vw,10px);color:var(--ink)}
-  #hud{position:absolute;top:0;left:0;right:0;z-index:30;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;
-    font-size:clamp(7px,1.4vw,11px);text-shadow:2px 2px 0 #000;pointer-events:none;}
-  #hud .grp{display:flex;gap:14px;align-items:center}
+  .charCard canvas{position:static;width:54px;height:54px;background:#15101f;border-radius:4px}
+  .charCard .nm{font-size:clamp(7px,1.4vw,10px);color:var(--ink)}
+
+  /* ── HUD ── */
+  #hud{position:absolute;top:0;left:0;right:0;z-index:30;display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;font-size:clamp(7px,1.6vw,12px);text-shadow:2px 2px 0 #000;pointer-events:none;
+    background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,transparent 100%);}
+  #hud .grp{display:flex;gap:10px;align-items:center}
   #hearts{color:var(--accent2)} #coins{color:#d9a066}
-  #escHint{position:absolute;top:34px;right:14px;z-index:30;font-size:clamp(6px,1.1vw,9px);color:#9d8cc0;text-shadow:2px 2px 0 #000;pointer-events:none;}
-  #matchScore{position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:31;display:none;
-    font-size:clamp(7px,1.5vw,12px);color:#fff;text-shadow:2px 2px 0 #000,0 0 6px #c8102e;pointer-events:none;white-space:nowrap;}
+  #escHint{position:absolute;top:32px;right:12px;z-index:30;font-size:clamp(6px,1.1vw,9px);color:#9d8cc0;text-shadow:2px 2px 0 #000;pointer-events:none;}
+  #matchScore{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:31;display:none;
+    font-size:clamp(7px,1.6vw,12px);color:#fff;text-shadow:2px 2px 0 #000,0 0 8px #c8102e;pointer-events:none;white-space:nowrap;}
+
+  /* ── dokunmatik kontroller ── */
   #touch{position:absolute;inset:0;z-index:35;pointer-events:none}
-  .tbtn{position:absolute;bottom:14px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.10);border:3px solid rgba(255,255,255,.35);
-    display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;pointer-events:auto;backdrop-filter:blur(2px);}
-  #tLeft{left:14px} #tRight{left:90px}
-  #tJump{right:14px;width:80px;height:80px;background:rgba(255,204,47,.18);border-color:rgba(255,204,47,.6)}
-  #tMenu{right:14px;top:10px;bottom:auto;width:44px;height:44px;font-size:13px}
-  .tbtn:active{background:rgba(255,255,255,.3)}
+  .tbtn{
+    position:absolute;border-radius:50%;
+    background:rgba(255,255,255,.12);border:3px solid rgba(255,255,255,.4);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:22px;pointer-events:auto;
+    -webkit-tap-highlight-color:transparent;
+    /* büyük dokunma alanı */
+    width:clamp(60px,13vw,76px);height:clamp(60px,13vw,76px);
+  }
+  #tLeft {left:12px;  bottom:clamp(14px,4vw,22px);}
+  #tRight{left:clamp(82px,18vw,100px); bottom:clamp(14px,4vw,22px);}
+  #tJump{
+    right:12px;bottom:clamp(10px,3vw,16px);
+    width:clamp(72px,16vw,92px);height:clamp(72px,16vw,92px);
+    background:rgba(255,204,47,.2);border-color:rgba(255,204,47,.7);font-size:26px;
+  }
+  #tMenu{right:12px;top:10px;bottom:auto;width:40px;height:40px;font-size:13px;}
+  /* label altta */
+  .tbtn::after{content:attr(data-label);position:absolute;bottom:-16px;font-size:8px;color:rgba(255,255,255,.6);white-space:nowrap;}
+  .tbtn:active{background:rgba(255,255,255,.32)}
   @media (hover:hover) and (pointer:fine){#touch{display:none}}
-  .small{font-size:clamp(7px,1.3vw,10px);color:#9d8cc0;line-height:1.8}
+
+  /* ── çeşitli metin ── */
+  .small{font-size:clamp(7px,1.4vw,10px);color:#9d8cc0;line-height:1.8}
   .blink{animation:blink 1s steps(2,start) infinite}@keyframes blink{to{opacity:0}}
-  #quoteText{font-size:clamp(10px,2vw,16px);color:var(--ink);line-height:2;max-width:80%}
+  #quoteText{font-size:clamp(9px,1.9vw,15px);color:var(--ink);line-height:2.1;max-width:84%}
   #quoteName{font-size:clamp(12px,2.6vw,22px);color:var(--accent);text-shadow:2px 2px 0 var(--accent2)}
 </style>
 </head>
 <body>
+<div id="rotateMsg">
+  <div class="icon">📱</div>
+  <p>Oyun yatay modda daha iyi çalışır!<br>Cihazını döndür veya<br>ekranı yatay tut.</p>
+</div>
 <div id="wrap">
   <canvas id="game" width="480" height="270"></canvas>
 
@@ -65,10 +115,10 @@
   <div id="matchScore">Liverpool 8 - 0 Beşiktaş</div>
 
   <div id="touch" class="hidden">
-    <div id="tLeft" class="tbtn">◀</div>
-    <div id="tRight" class="tbtn">▶</div>
-    <div id="tJump" class="tbtn">⤒</div>
-    <div id="tMenu" class="tbtn">⎋</div>
+    <div id="tLeft"  class="tbtn" data-label="SOL">◀</div>
+    <div id="tRight" class="tbtn" data-label="SAĞ">▶</div>
+    <div id="tJump"  class="tbtn" data-label="ZIPLA">⤒</div>
+    <div id="tMenu"  class="tbtn">⎋</div>
   </div>
 
   <div id="titleScreen" class="screen">
@@ -449,7 +499,14 @@ function draw(){
   ctx.restore();
 }
 
-function loop(){update();draw();requestAnimationFrame(loop);}
+let _lastTime=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(!_lastTime){_lastTime=ts;return;}
+  if(ts-_lastTime<15.5)return; // ~64fps cap: 120/144Hz ekranlarda oyun hızı kaymasını önler
+  _lastTime=ts;
+  update();draw();
+}
 
 function show(id){
   ['titleScreen','selectScreen','quoteScreen','pauseScreen','endScreen'].forEach(s=>document.getElementById(s).classList.add('hidden'));
@@ -493,7 +550,7 @@ function beginGame(){
 document.getElementById('againBtn').onclick=()=>{nutsLeft=52;document.getElementById('coins').textContent='🌰 '+nutsLeft;setLives(3);levels=buildLevels();show(null);startLevel(0);};
 document.getElementById('menuBtn').onclick=()=>{state='title';show('selectScreen');};
 
-loop();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
