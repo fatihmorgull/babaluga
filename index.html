@@ -131,24 +131,56 @@
   #quoteText{font-size:clamp(9px,1.9vw,15px);color:var(--ink);line-height:2.1;max-width:84%}
   #quoteName{font-size:clamp(12px,2.6vw,22px);color:var(--accent);text-shadow:2px 2px 0 var(--accent2)}
 
-  /* ── tam ekran butonu ── */
+  /* ── tam ekran butonu: durdurma tuşunun hemen yanında, küçük, HUD'u kapatmaz ── */
   #fsBtn{
-    position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
-    z-index:36;padding:8px 14px;
-    background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.3);
-    border-radius:20px;color:rgba(255,255,255,.75);
-    font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.5vw,10px);
-    cursor:pointer;-webkit-tap-highlight-color:transparent;
-    display:none;/* yalnızca dokunmatik cihazda göster */
-    gap:6px;align-items:center;white-space:nowrap;
+    position:absolute;
+    top:max(8px,env(safe-area-inset-top,8px));
+    right:calc(max(12px,env(safe-area-inset-right,12px)) + 48px);
+    z-index:36;width:32px;height:32px;padding:0;
+    background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.28);
+    border-radius:6px;color:rgba(255,255,255,.8);font-size:14px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
   }
-  /* oyun oynanırken butonu yukarı al (joystick üzerine gelmesin) */
-  #fsBtn.ingame{bottom:auto;top:auto;
-    position:absolute;right:8px;bottom:8px;left:auto;transform:none;
-    padding:6px 10px;font-size:clamp(6px,1.2vw,9px);}
-  @media (pointer:coarse){#fsBtn{display:flex;}}
-  /* fullscreen moddayken gizle */
-  :fullscreen #fsBtn,:fullscreen #tMenu{opacity:.4;}
+  #fsBtn:active{background:rgba(255,255,255,.2);}
+  :fullscreen #fsBtn{opacity:.35;}
+
+  /* ── bölüm 2 kayan ticker mesajı ── */
+  #ticker{position:absolute;top:28px;left:0;right:0;z-index:38;
+    overflow:hidden;height:20px;display:none;pointer-events:none;}
+  #ticker.show{display:block;}
+  #tickerText{display:inline-block;white-space:nowrap;
+    font-size:clamp(7px,1.4vw,10px);color:var(--accent);
+    text-shadow:1px 1px 0 #000,0 0 6px rgba(255,204,47,.4);
+    animation:tickerScroll 6.5s linear forwards;}
+  @keyframes tickerScroll{from{transform:translateX(110%)}to{transform:translateX(-110%)}}
+
+  /* ── "helal kingom" kutlama ── */
+  #kingomMsg{position:absolute;left:50%;top:42%;
+    transform:translate(-50%,-50%);z-index:39;pointer-events:none;
+    white-space:nowrap;font-size:clamp(9px,2vw,13px);
+    color:var(--good);text-shadow:2px 2px 0 #000,0 0 10px var(--good);
+    display:none;animation:kingomPop 2.4s ease forwards;}
+  @keyframes kingomPop{
+    0%  {opacity:0;transform:translate(-50%,-50%) scale(.6)}
+    18% {opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+    35% {transform:translate(-50%,-50%) scale(1)}
+    72% {opacity:1}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(.85)}
+  }
+
+  /* ── Furkan'ın Tarkan Dansı butonu ── */
+  #tarkanBtn{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);
+    z-index:45;font-family:inherit;font-size:clamp(9px,1.8vw,13px);
+    color:#1a1228;background:var(--accent);border:none;
+    padding:14px 22px;box-shadow:0 5px 0 #b88a00,0 6px 0 #000;border-radius:6px;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
+    animation:tarkanBounce .55s ease-in-out infinite alternate;}
+  @keyframes tarkanBounce{
+    from{transform:translateX(-50%) translateY(0)}
+    to  {transform:translateX(-50%) translateY(-8px)}
+  }
+  #tarkanBtn:active{filter:brightness(1.2);}
 
   /* ── iOS "Ana Ekrana Ekle" ipucu overlay ── */
   #iosTip{
@@ -196,8 +228,17 @@
     <div id="tMenu"  class="tbtn">⎋</div>
   </div>
 
-  <!-- tam ekran butonu (dokunmatik cihazda görünür) -->
-  <button id="fsBtn">⛶ TAM EKRAN</button>
+  <!-- tam ekran butonu -->
+  <button id="fsBtn" title="Tam ekran">⛶</button>
+
+  <!-- bölüm 2 kayan mesaj -->
+  <div id="ticker"><span id="tickerText"></span></div>
+
+  <!-- helal kingom bildirimi -->
+  <div id="kingomMsg">🌰 helal kingom</div>
+
+  <!-- Furkan'ın Tarkan Dansı butonu (sadece mangal bölümünde görünür) -->
+  <button id="tarkanBtn" class="hidden">🕺 Tarkan Dansı Yap</button>
 
   <div id="titleScreen" class="screen">
     <h1>BABALUGA<br>KAÇIŞI</h1>
@@ -262,14 +303,61 @@ const CHARS=[
   {name:'HÜSEYİN', skin:'#8d5a32',hair:'#0a0a0a',hairStyle:'buzz',shirt:'#f4d03f',facial:'none',bigMustache:true,accessory:'none',eyes:'big'},
 ];
 const QUOTES={
-  'FATİH':'"Bu karakteri seçmek pek iyi olmadı gibi..."',
+  'FATİH':'"Büyük ellerim bu bölümü geçmemi kolaylaştıracak."',
   'FURKAN':'"Doğru seçim! Babalugaları engelli taklidimle savururum."',
   'KAYA':'"Benim e-sporcu olduğumu anladın tabii."',
   'SAFA':'"Bir iced americano\u0027ya bu işi çözerim."',
-  'KILIÇHAN':'"Ahmakça bir seçim."',
+  'KILIÇHAN':'"Ben bi arabaşı yutuyum da şu bölümü geçecağam."',
   'MERT':'"Ekstrem bir durum çıkmazsa bölümü geçtik."',
   'HÜSEYİN':'"Haydi akrebim! Falsolu..."',
 };
+
+/* bölüm 2'ye geçince karaktere göre kayan mesaj */
+const L2_MSGS={
+  'FATİH':'furkan sana fifada yenilmek istiyor',
+  'FURKAN':'makinalaşmak istiyorum trum tiki tak',
+  'KAYA':'ben valo gelmem zomboid oynicam',
+  'SAFA':'son dakika: Erzurumspor süper ligde!',
+  'KILIÇHAN':'kanka ben bud içerim ya',
+  'MERT':'oyunu çabuk bitir kuzenimin kayınçosunun doğum günü var',
+  'HÜSEYİN':'en büyük antalyaspor',
+};
+
+let kingomShown=false, tarkanDanced=false;
+
+function showTicker(txt){
+  const el=document.getElementById('ticker');
+  const sp=document.getElementById('tickerText');
+  sp.textContent=txt;
+  el.classList.add('show');
+  // animasyonu yeniden başlat
+  sp.style.animation='none';
+  void sp.offsetWidth;
+  sp.style.animation='';
+  setTimeout(()=>el.classList.remove('show'),6800);
+}
+function showKingom(){
+  const el=document.getElementById('kingomMsg');
+  el.style.display='block';
+  el.style.animation='none';
+  void el.offsetWidth;
+  el.style.animation='';
+  setTimeout(()=>{el.style.display='none';},2500);
+}
+function showTarkanBtn(){
+  state='tarkan';
+  document.getElementById('tarkanBtn').classList.remove('hidden');
+}
+function tarkanDance(){
+  document.getElementById('tarkanBtn').classList.add('hidden');
+  const bs=levels[lvl].bossState;
+  if(bs){bs.alive=false;bs.squish=30;}
+  tarkanDanced=true;
+  state='play';
+  prevJump=true;
+}
+document.getElementById('tarkanBtn').addEventListener('click',tarkanDance);
+document.getElementById('tarkanBtn').addEventListener('touchend',e=>{e.preventDefault();tarkanDance();});
 
 function drawHero(c,ch,px,py,S,face=1,frame=0){
   const set=(x,y,col)=>{if(!col)return;c.fillStyle=col;c.fillRect(px+(face>0?x:15-x)*S,py+y*S,S,S);};
@@ -394,6 +482,10 @@ function startLevel(n){
   cam=0; swallowT=0; swallowScale=1;
   document.getElementById('level').textContent=L.mangal?'MANGAL 🔥':('BÖLÜM '+(n+1)+'/5');
   document.getElementById('coins').textContent='🌰 '+nutsLeft;
+  // bölüm 2'ye geçince kayan mesaj
+  if(n===1&&hero&&L2_MSGS[hero.name]) setTimeout(()=>showTicker(L2_MSGS[hero.name]),400);
+  // mangal bölümü sıfırla
+  if(n===4){tarkanDanced=false;}
   state='play';
 }
 function setLives(v){lives=v;document.getElementById('hearts').textContent='♥'.repeat(Math.max(0,lives));}
@@ -407,6 +499,7 @@ let swallowT=0, swallowScale=1;
 
 function update(){
   if(state==='swallow'){updateSwallow();return;}
+  if(state==='tarkan')return;
   if(state!=='play')return;
   tick++;
   const L=levels[lvl];
@@ -440,7 +533,11 @@ function update(){
   cam=Math.max(0,Math.min(player.x-W/2+player.w/2,L.width-W));
   if(Math.abs(player.vx)>0.4&&tick%8===0)player.frame^=1;
 
-  for(const c of L.nutState){if(c.got)continue;if(aabb(player,{x:c.x-2,y:c.y-2,w:14,h:14})){c.got=true;nutsLeft=Math.max(0,nutsLeft-1);document.getElementById('coins').textContent='🌰 '+nutsLeft;}}
+  for(const c of L.nutState){if(c.got)continue;if(aabb(player,{x:c.x-2,y:c.y-2,w:14,h:14})){
+    c.got=true;nutsLeft=Math.max(0,nutsLeft-1);
+    document.getElementById('coins').textContent='🌰 '+nutsLeft;
+    if(nutsLeft<=42&&!kingomShown&&state==='play'){kingomShown=true;showKingom();}
+  }}
   for(const s of L.spikes){if(player.invuln<=0&&aabb(player,{x:s[0]+2,y:s[1],w:12,h:12}))hurt();}
   for(const s of L.sawState){s.x+=s.dir*1.5;if(s.x<s.min){s.x=s.min;s.dir=1;}if(s.x>s.max){s.x=s.max;s.dir=-1;}
     if(player.invuln<=0&&aabb(player,{x:s.x-2,y:s.y-2,w:22,h:22}))hurt();}
@@ -475,8 +572,12 @@ function update(){
   if(player.invuln>0)player.invuln--;
   if(player.y>H+40)hurt(true);
 
-  // 5. BÖLÜM: bayrağa varmadan babaluga seni yutar — asla geçilemez
-  if(L.mangal && player.x+player.w > L.flag.x-220){ startSwallow(); return; }
+  // 5. BÖLÜM: Furkan Tarkan dansı yaparsa geçer; diğerleri yutulur
+  if(L.mangal&&!tarkanDanced&&player.x+player.w>L.flag.x-220){
+    if(hero.name==='FURKAN') showTarkanBtn();
+    else startSwallow();
+    return;
+  }
 
   if(player.x+player.w>L.flag.x){
     if(lvl<levels.length-1){ const next=lvl+1; if(next===4) enterMangal(); else startLevel(next); }
@@ -599,15 +700,13 @@ function loop(ts){
 function show(id){
   ['titleScreen','selectScreen','quoteScreen','pauseScreen','endScreen'].forEach(s=>document.getElementById(s).classList.add('hidden'));
   const hud=document.getElementById('hud'),tch=document.getElementById('touch'),esc=document.getElementById('escHint');
-  const fsBtn=document.getElementById('fsBtn');
   if(id){
     document.getElementById(id).classList.remove('hidden');
     hud.classList.add('hidden');tch.classList.add('hidden');esc.classList.add('hidden');
-    fsBtn.classList.remove('ingame');
+    document.getElementById('tarkanBtn').classList.add('hidden');
   } else {
     hud.classList.remove('hidden');esc.classList.remove('hidden');
     if(isTouch)tch.classList.remove('hidden');
-    fsBtn.classList.add('ingame');
   }
 }
 
@@ -685,9 +784,10 @@ document.getElementById('goBtn').onclick=()=>{
 function beginGame(){
   document.getElementById('player').textContent=hero.name;
   nutsLeft=52;document.getElementById('coins').textContent='🌰 '+nutsLeft;
+  kingomShown=false;tarkanDanced=false;
   setLives(3);levels=buildLevels();show(null);startLevel(0);
 }
-document.getElementById('againBtn').onclick=()=>{nutsLeft=52;document.getElementById('coins').textContent='🌰 '+nutsLeft;setLives(3);levels=buildLevels();show(null);startLevel(0);};
+document.getElementById('againBtn').onclick=()=>{nutsLeft=52;kingomShown=false;tarkanDanced=false;document.getElementById('tarkanBtn').classList.add('hidden');document.getElementById('coins').textContent='🌰 '+nutsLeft;setLives(3);levels=buildLevels();show(null);startLevel(0);};
 document.getElementById('menuBtn').onclick=()=>{state='title';show('selectScreen');};
 
 requestAnimationFrame(loop);
